@@ -79,7 +79,7 @@ def generate_pdf_report(summary, hourly_trend_df, top10_sites, top10_cells, wors
     # MỤC II. FREQBAND CHARTS
     _has = lambda d: d is not None and not d.empty
     if _has(fb_cell_counts) or _has(fb_tf_df) or _has(cell_type_counts):
-        story.append(Paragraph("II. THỐNG KÊ PHÂN BỔ CELL VÀ TRAFFIC THEO FREQBAND", h2_style))
+        story.append(Paragraph("II. THỐNG KÊ PHÂN BỔ CELL VÀ TRAFFIC", h2_style))
         story.append(Spacer(1, 2))
 
         fb_img_buf = io.BytesIO()
@@ -168,7 +168,7 @@ def generate_pdf_report(summary, hourly_trend_df, top10_sites, top10_cells, wors
         story.append(Spacer(1, 10))
 
     # MỤC III. CHARTS XU HƯỚNG
-    story.append(Paragraph("III. XU HƯỚNG CÁC CHỈ SỐ KPI THEO KHUNG GIỜ/NGÀY", h2_style))
+    story.append(Paragraph("III. CÁC CHỈ SỐ KPI", h2_style))
     story.append(Spacer(1, 4))
 
     if not hourly_trend_df.empty:
@@ -292,7 +292,7 @@ def generate_pdf_report(summary, hourly_trend_df, top10_sites, top10_cells, wors
         story.append(t_ts)
 
     story.append(PageBreak())
-    story.append(Paragraph("V. DANH SÁCH WORST 10 CELLS CHO CÁC KPI CHÍNH (CSSR, DCR, HANDOVER)", h2_style))
+    story.append(Paragraph("V. DANH SÁCH WORST 10 CELLS CÁC KPI CHÍNH (CSSR, DCR, HANDOVER)", h2_style))
     story.append(Spacer(1, 4))
 
     def render_worst_pdf_table(title, df_data, val_col, fmt, bg_color):
