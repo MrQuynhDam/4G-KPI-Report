@@ -10,21 +10,7 @@ from reportlab.platypus import (
 
 from src.config import FONT_NAME, FONT_NAME_BOLD
 
-def generate_pdf_report(
-    summary,
-    hourly_trend_df,
-    top10_sites,
-    top10_cells,
-    worst10_cssr,
-    worst10_dcr,
-    worst10_intra_ho,
-    worst10_inter_ho,
-    fb_cell_counts=None,
-    fb_tf_df=None,
-    cell_type_counts=None,
-    fb_type_xtab=None,
-    fb_dl_df=None  # <-- Bổ sung tham số nhận dữ liệu DL Throughput 4G
-):
+def generate_pdf_report(summary, hourly_trend_df, top10_sites, top10_cells, worst10_cssr, worst10_dcr, worst10_intra_ho, worst10_inter_ho, fb_cell_counts=None, fb_tf_df=None, cell_type_counts=None, fb_type_xtab=None, fb_dl_df=None):
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     story = []
@@ -90,22 +76,14 @@ def generate_pdf_report(
     story.append(grid_cards)
     story.append(Spacer(1, 8))
 
-    # MỤC II. FREQBAND CHARTS & TABLES
+    # MỤC II. FREQBAND CHARTS (LƯỚI 2x2)
     _has = lambda d: d is not None and not d.empty
     if _has(fb_cell_counts) or _has(fb_tf_df) or _has(cell_type_counts) or _has(fb_dl_df):
-        story.append(Paragraph("II. THỐNG KÊ PHÂN BỔ CELL, TRAFFIC VÀ DL THROUGHPUT THEO BĂNG TẦN", h2_style))
+        story.append(Paragraph("II. THỐNG KÊ PHÂN BỔ CELL, TRAFFIC VÀ DL THROUGHPUT THEO FREQBAND", h2_style))
         story.append(Spacer(1, 2))
 
         fb_img_buf = io.BytesIO()
-        has_dl = _has(fb_dl_df)
-        n_cols = 4 if has_dl else 3
-        fig_fb, axes = plt.subplots(1, n_cols, figsize=(11, 2.8), dpi=150)
-        
-        ax1_fb = axes[0]
-        ax_ct = axes[1]
-        ax2_fb = axes[2]
-        ax3_fb = axes[3] if has_dl else None
-
+        fig_fb, ((ax1_fb, ax_ct), (ax2_fb, ax3_fb)) = plt.subplots(2, 2, figsize=(11, 4.2), dpi=150)
         fb_colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4']
 
         def _donut(ax, labels, sizes, cols, title):
@@ -113,33 +91,32 @@ def generate_pdf_report(
                 sizes, labels=labels, autopct=lambda p: f"{p:.1f}%", startangle=90,
                 colors=cols, wedgeprops=dict(width=0.45, edgecolor='white')
             )
-            for t in texts: t.set_fontsize(6.5 if has_dl else 7.5)
-            for at in autotexts: at.set_fontsize(6 if has_dl else 7); at.set_weight('bold')
-            ax.set_title(title, fontsize=8 if has_dl else 8.5, fontweight='bold', pad=6)
+            for t in texts: t.set_fontsize(7)
+            for at in autotexts: at.set_fontsize(6.5); at.set_weight('bold')
+            ax.set_title(title, fontsize=8, fontweight='bold', pad=4)
 
-        # 1. Biểu đồ Cell theo Freqband
+        # Chart 1: Cell counts theo Freqband
         if _has(fb_cell_counts):
             fb_labels = [f"{b} ({n})" for b, n in zip(fb_cell_counts["Freqband"], fb_cell_counts["Số lượng Cell"])]
-            _donut(ax1_fb, fb_labels, fb_cell_counts["Số lượng Cell"].tolist(), fb_colors[:len(fb_labels)], "Số Cell theo Freqband")
+            _donut(ax1_fb, fb_labels, fb_cell_counts["Số lượng Cell"].tolist(), fb_colors[:len(fb_labels)], "Số lượng Cell theo Freqband")
         else: ax1_fb.axis('off')
 
-        # 2. Biểu đồ Cell theo Loại Cell (VNP/MORAN)
+        # Chart 2: Cell counts theo Cell Type
         if _has(cell_type_counts):
             ct_cmap = {"VNP": "#3b82f6", "MORAN": "#f59e0b"}
             ct_labels = [f"{t} ({n})" for t, n in zip(cell_type_counts["Cell Type"], cell_type_counts["Số lượng Cell"])]
             ct_cols = [ct_cmap.get(t, '#94a3b8') for t in cell_type_counts["Cell Type"]]
-            _donut(ax_ct, ct_labels, cell_type_counts["Số lượng Cell"].tolist(), ct_cols, "Số Cell theo Loại Cell")
+            _donut(ax_ct, ct_labels, cell_type_counts["Số lượng Cell"].tolist(), ct_cols, "Số lượng Cell theo Loại Cell")
         else: ax_ct.axis('off')
 
-        # 3. Biểu đồ Traffic theo Freqband
+        # Chart 3: Traffic Volume theo Freqband
         if _has(fb_tf_df):
-            tf_col = "Total Data Traffic Volume (GB)" if "Total Data Traffic Volume (GB)" in fb_tf_df.columns else "TRAFFIC"
             fb_bands = fb_tf_df["Freqband"].tolist()
-            fb_traffics = fb_tf_df[tf_col].tolist()
+            fb_traffics = fb_tf_df["Total Data Traffic Volume (GB)"].tolist()
             fb_bars = ax2_fb.bar(fb_bands, fb_traffics, color='#0284c7', width=0.45, alpha=0.85)
-            ax2_fb.set_title("Traffic (GB) theo Freqband", fontsize=8 if has_dl else 8.5, fontweight='bold', pad=6)
-            ax2_fb.set_ylabel("Traffic (GB)", fontsize=7 if has_dl else 7.5)
-            ax2_fb.tick_params(axis='both', labelsize=6.5 if has_dl else 7)
+            ax2_fb.set_title("Tổng Traffic Volume (GB) theo Freqband", fontsize=8, fontweight='bold', pad=4)
+            ax2_fb.set_ylabel("Traffic (GB)", fontsize=7)
+            ax2_fb.tick_params(axis='both', labelsize=6.5)
             ax2_fb.grid(True, linestyle='--', alpha=0.25, axis='y')
 
             max_tf = max(fb_traffics) if fb_traffics else 1
@@ -147,95 +124,74 @@ def generate_pdf_report(
 
             for bar in fb_bars:
                 yval = bar.get_height()
-                ax2_fb.text(bar.get_x() + bar.get_width()/2.0, yval + (max_tf * 0.02), f"{yval:,.0f}G", ha='center', va='bottom', fontsize=6 if has_dl else 6.5, fontweight='bold')
+                ax2_fb.text(bar.get_x() + bar.get_width()/2.0, yval + (max_tf * 0.02), f"{yval:,.0f}", ha='center', va='bottom', fontsize=6, fontweight='bold')
         else: ax2_fb.axis('off')
 
-        # 4. Biểu đồ DL Throughput theo Freqband (nếu có)
-        if has_dl and ax3_fb is not None:
-            dl_col = next((c for c in ["DL_Throughput_Mbps", "Avg DL Throughput (Mbps)", "USER_DL_AVG_THROUGHPUT"] if c in fb_dl_df.columns), fb_dl_df.columns[1] if len(fb_dl_df.columns) > 1 else "DL_Throughput_Mbps")
-            fb_dl_bands = fb_dl_df["Freqband"].tolist()
-            fb_dls = fb_dl_df[dl_col].tolist()
-            fb_bars3 = ax3_fb.bar(fb_dl_bands, fb_dls, color='#10b981', width=0.45, alpha=0.85)
-            ax3_fb.set_title("DL Thrp TB (Mbps)", fontsize=8, fontweight='bold', pad=6)
-            ax3_fb.set_ylabel("Throughput (Mbps)", fontsize=7)
+        # Chart 4: DL Throughput theo Freqband
+        if _has(fb_dl_df) and "DL_Throughput_Mbps" in fb_dl_df.columns:
+            dl_bands = fb_dl_df["Freqband"].tolist()
+            dl_thrp = fb_dl_df["DL_Throughput_Mbps"].tolist()
+            dl_bars = ax3_fb.bar(dl_bands, dl_thrp, color='#8b5cf6', width=0.45, alpha=0.85)
+            ax3_fb.set_title("DL Throughput TB (Mbps) theo Freqband", fontsize=8, fontweight='bold', pad=4)
+            ax3_fb.set_ylabel("DL Thrp (Mbps)", fontsize=7)
             ax3_fb.tick_params(axis='both', labelsize=6.5)
             ax3_fb.grid(True, linestyle='--', alpha=0.25, axis='y')
 
-            max_dl = max(fb_dls) if fb_dls else 1
+            max_dl = max(dl_thrp) if dl_thrp else 1
             ax3_fb.set_ylim(0, max_dl * 1.18)
 
-            for bar in fb_bars3:
+            for bar in dl_bars:
                 yval = bar.get_height()
-                ax3_fb.text(bar.get_x() + bar.get_width()/2.0, yval + (max_dl * 0.02), f"{yval:,.1f}M", ha='center', va='bottom', fontsize=6, fontweight='bold')
+                ax3_fb.text(bar.get_x() + bar.get_width()/2.0, yval + (max_dl * 0.02), f"{yval:.2f}", ha='center', va='bottom', fontsize=6, fontweight='bold')
+        else: ax3_fb.axis('off')
 
         plt.tight_layout()
         plt.savefig(fb_img_buf, format='png', dpi=150)
         plt.close()
         fb_img_buf.seek(0)
-        story.append(Image(fb_img_buf, width=740, height=188))
-        story.append(Spacer(1, 6))
+        story.append(Image(fb_img_buf, width=740, height=280))
+        story.append(Spacer(1, 4))
 
-        # Bảng chi tiết Freqband x Loại Cell x Traffic x DL Throughput
         if _has(fb_type_xtab):
-            _ps = ParagraphStyle("FBT", fontName=FONT_NAME, fontSize=8, textColor=colors.HexColor("#334155"), alignment=1)
+            _ps = ParagraphStyle("FBT", fontName=FONT_NAME, fontSize=7.5, textColor=colors.HexColor("#334155"), alignment=1)
             _pw = ParagraphStyle("FBTW", parent=_ps, textColor=colors.white)
             def _c(txt, bold=False, white=False): return Paragraph(f"<b>{txt}</b>" if bold else str(txt), _pw if white else _ps)
 
-            tf_col = "Total Data Traffic Volume (GB)" if (_has(fb_tf_df) and "Total Data Traffic Volume (GB)" in fb_tf_df.columns) else "TRAFFIC"
-            tf_map = dict(zip(fb_tf_df["Freqband"], fb_tf_df[tf_col])) if _has(fb_tf_df) else {}
-            
-            dl_map = {}
-            if has_dl:
-                dl_col = next((c for c in ["DL_Throughput_Mbps", "Avg DL Throughput (Mbps)", "USER_DL_AVG_THROUGHPUT"] if c in fb_dl_df.columns), fb_dl_df.columns[1] if len(fb_dl_df.columns) > 1 else "DL_Throughput_Mbps")
-                dl_map = dict(zip(fb_dl_df["Freqband"], fb_dl_df[dl_col]))
-
+            tf_map = dict(zip(fb_tf_df["Freqband"], fb_tf_df["Total Data Traffic Volume (GB)"])) if _has(fb_tf_df) else {}
+            dl_map = dict(zip(fb_dl_df["Freqband"], fb_dl_df["DL_Throughput_Mbps"])) if (_has(fb_dl_df) and "DL_Throughput_Mbps" in fb_dl_df.columns) else {}
             grand = int(fb_type_xtab["Tổng"].sum()) or 1
 
-            story.append(Paragraph("<b>Thống kê số lượng Cell, Traffic và Throughput theo Freqband & Loại Cell (VNP / MORAN):</b>", norm_style))
+            story.append(Paragraph("<b>Thống kê số lượng Cell, Traffic & DL Throughput theo Freqband và Loại Cell:</b>", norm_style))
             story.append(Spacer(1, 2))
-            
-            if has_dl:
-                hdr = ["Freqband", "Cell VNP", "Cell MORAN", "Tổng Cell", "Tỷ lệ (%)", "Traffic (GB)", "DL Thrp TB (Mbps)"]
-                col_w = [90, 90, 90, 90, 90, 110, 110]
-            else:
-                hdr = ["Freqband", "Cell VNP", "Cell MORAN", "Tổng Cell", "Tỷ lệ (%)", "Traffic (GB)"]
-                col_w = [110, 110, 110, 110, 110, 130]
-
+            hdr = ["Freqband", "Cell VNP", "Cell MORAN", "Tổng Cell", "Tỷ lệ (%)", "Traffic (GB)", "DL Thrp (Mbps)"]
             rows = [[_c(h, True, True) for h in hdr]]
             for _, r in fb_type_xtab.iterrows():
-                fb_val = r["Freqband"]
-                row_items = [
-                    _c(fb_val), _c(int(r["VNP"])), _c(int(r["MORAN"])), _c(int(r["Tổng"])),
+                fb = r["Freqband"]
+                rows.append([
+                    _c(fb), _c(int(r["VNP"])), _c(int(r["MORAN"])), _c(int(r["Tổng"])),
                     _c(f"{r['Tổng'] / grand * 100:.1f}"),
-                    _c(f"{tf_map[fb_val]:,.1f}" if fb_val in tf_map and pd.notnull(tf_map[fb_val]) else "-"),
-                ]
-                if has_dl:
-                    row_items.append(_c(f"{dl_map[fb_val]:,.2f}" if fb_val in dl_map and pd.notnull(dl_map[fb_val]) else "-"))
-                rows.append(row_items)
-
+                    _c(f"{tf_map[fb]:,.1f}" if fb in tf_map and pd.notnull(tf_map[fb]) else "-"),
+                    _c(f"{dl_map[fb]:.2f}" if fb in dl_map and pd.notnull(dl_map[fb]) else "-"),
+                ])
             tot_tf = sum(v for v in tf_map.values() if pd.notnull(v)) if tf_map else None
-            tot_dl = (sum(v for v in dl_map.values() if pd.notnull(v)) / len(dl_map)) if dl_map else None
-
-            last_row = [
-                _c("Tổng / TB", True), _c(int(fb_type_xtab["VNP"].sum()), True), _c(int(fb_type_xtab["MORAN"].sum()), True),
+            tot_dl = summary.get('dl', 0)
+            rows.append([
+                _c("Tổng", True), _c(int(fb_type_xtab["VNP"].sum()), True), _c(int(fb_type_xtab["MORAN"].sum()), True),
                 _c(grand if grand != 1 or fb_type_xtab["Tổng"].sum() else 0, True), _c("100.0", True),
                 _c(f"{tot_tf:,.1f}" if tot_tf is not None else "-", True),
-            ]
-            if has_dl:
-                last_row.append(_c(f"{tot_dl:,.2f}" if tot_dl is not None else "-", True))
-            rows.append(last_row)
-
-            t_fb = Table(rows, colWidths=col_w, hAlign="LEFT")
+                _c(f"{tot_dl:.2f}" if tot_dl is not None else "-", True),
+            ])
+            t_fb = Table(rows, colWidths=[95, 95, 95, 95, 95, 115, 110], hAlign="LEFT")
             t_fb.setStyle(TableStyle([
                 ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#0284c7")),
                 ("BACKGROUND", (0,-1), (-1,-1), colors.HexColor("#e2e8f0")),
-                ("BOTTOMPADDING", (0,0), (-1,-1), 3),
-                ("TOPPADDING", (0,0), (-1,-1), 3),
+                ("BOTTOMPADDING", (0,0), (-1,-1), 2.5),
+                ("TOPPADDING", (0,0), (-1,-1), 2.5),
                 ("GRID", (0,0), (-1,-1), 0.5, colors.HexColor("#cbd5e1")),
                 ("ROWBACKGROUNDS", (0,1), (-1,-2), [colors.white, colors.HexColor("#f8fafc")]),
             ]))
             story.append(t_fb)
-        story.append(Spacer(1, 10))
+        story.append(Spacer(1, 8))
 
     # MỤC III. CHARTS XU HƯỚNG
     story.append(Paragraph("III. CÁC CHỈ SỐ KPI", h2_style))
