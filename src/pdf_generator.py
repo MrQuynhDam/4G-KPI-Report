@@ -22,7 +22,7 @@ def generate_pdf_report(summary, hourly_trend_df, top10_sites, top10_cells, wors
     now_str = pd.Timestamp.now().strftime("%d/%m/%Y")
 
     story.append(Paragraph("BÁO CÁO CHẤT LƯỢNG MẠNG 4G", t_style))
-    story.append(Paragraph(f"Thời gian xuất báo cáo: {now_str} | RNOC2", norm_style))
+    story.append(Paragraph(f"Thời gian xuất báo cáo: {now_str}", norm_style))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#3b82f6"), spaceAfter=10))
 
     # MỤC I. 10 VISUAL KPI CARDS
