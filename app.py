@@ -82,7 +82,7 @@ st.markdown("---")
 render_kpi_cards(filtered_df)
 st.markdown("---")
 
-fb_cell_counts, fb_tf_df, cell_type_counts, fb_type_xtab = render_freqband_section(filtered_df, cell_col)
+fb_cell_counts, fb_tf_df, cell_type_counts, fb_type_xtab, fb_dl_df = render_freqband_section(filtered_df, cell_col)
 st.markdown("---")
 
 render_trend_chart(filtered_df, has_hour)
@@ -93,7 +93,7 @@ st.markdown("---")
 
 render_worst_cells_and_pdf(
     filtered_df, site_col, cell_col, cell_agg_all, top_site_df, top_cell_df,
-    fb_cell_counts, fb_tf_df, cell_type_counts, fb_type_xtab, sel_dates, sel_sites, has_hour
+    fb_cell_counts, fb_tf_df, cell_type_counts, fb_type_xtab, fb_dl_df, sel_dates, sel_sites, has_hour
 )
 
 st.caption("🚀 4G RAN Quality Report")
