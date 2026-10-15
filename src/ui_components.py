@@ -72,7 +72,7 @@ def render_kpi_cards(filtered_df):
 
 def render_freqband_section(filtered_df, cell_col):
     """Hiển thị phân bổ Cell, Traffic & DL Throughput theo Freqband."""
-    st.subheader("📊 Thống Kê Phân Bổ Cell, Traffic & DL Throughput Theo Freqband")
+    st.subheader("📊 Thống Kê Phân Bổ Cell, Traffic VÀ DL Throughput Theo Freqband")
 
     fb_cell_counts, fb_tf_df, cell_type_counts, fb_type_xtab, fb_dl_df = pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
@@ -312,6 +312,9 @@ def render_worst_cells_and_pdf(filtered_df, site_col, cell_col, cell_agg_all, to
                         worst10_dcr = _top("Service Drop (all service)", False)
                         worst10_intra_ho = _top("Intra-frequency HO (%)", True)
                         worst10_inter_ho = _top("Inter-frequency HO (%)", True)
+                        worst10_cqi = _top("CQI_4G", True)
+                        worst10_dl_thrp = _top("DL_Throughput_Mbps", True)
+                        worst10_prb = _top("Resource Block Untilizing Rate Downlink (%)", False)
 
                         top10_sites_pdf = top_site_df.head(10) if not top_site_df.empty else pd.DataFrame()
                         top10_cells_pdf = top_cell_df.head(10) if not top_cell_df.empty else pd.DataFrame()
@@ -348,7 +351,8 @@ def render_worst_cells_and_pdf(filtered_df, site_col, cell_col, cell_agg_all, to
                         pdf_buf = generate_pdf_report(
                             summary_data, c_data_timeline, top10_sites_pdf, top10_cells_pdf,
                             worst10_cssr, worst10_dcr, worst10_intra_ho, worst10_inter_ho,
-                            fb_cell_counts, fb_tf_df, cell_type_counts, fb_type_xtab, fb_dl_df
+                            fb_cell_counts, fb_tf_df, cell_type_counts, fb_type_xtab, fb_dl_df,
+                            worst10_cqi=worst10_cqi, worst10_dl_thrp=worst10_dl_thrp, worst10_prb=worst10_prb
                         )
                         st.session_state["pdf_bytes"] = pdf_buf.getvalue()
                         st.session_state["pdf_sig"] = _pdf_sig
