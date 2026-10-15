@@ -10,7 +10,7 @@ from reportlab.platypus import (
 
 from src.config import FONT_NAME, FONT_NAME_BOLD
 
-def generate_pdf_report(summary, hourly_trend_df, top10_sites, top10_cells, worst10_cssr, worst10_dcr, worst10_intra_ho, worst10_inter_ho, fb_cell_counts=None, fb_tf_df=None, cell_type_counts=None, fb_type_xtab=None, fb_dl_df=None):
+def generate_pdf_report(summary, hourly_trend_df, top10_sites, top10_cells, worst10_cssr, worst10_dcr, worst10_intra_ho, worst10_inter_ho, fb_cell_counts=None, fb_tf_df=None, cell_type_counts=None, fb_type_xtab=None, fb_dl_df=None, worst10_cqi=None, worst10_dl_thrp=None, worst10_prb=None):
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     story = []
@@ -318,11 +318,11 @@ def generate_pdf_report(summary, hourly_trend_df, top10_sites, top10_cells, wors
         story.append(t_ts)
 
     story.append(PageBreak())
-    story.append(Paragraph("V. DANH SÁCH WORST 10 CELLS CÁC KPI CHÍNH (CSSR, DCR, HANDOVER)", h2_style))
+    story.append(Paragraph("V. DANH SÁCH WORST 10 CELLS CÁC KPI CHÍNH", h2_style))
     story.append(Spacer(1, 4))
 
     def render_worst_pdf_table(title, df_data, val_col, fmt, bg_color):
-        if df_data.empty: return
+        if df_data is None or df_data.empty: return
         story.append(Paragraph(f"<b>{title}</b>", norm_style))
         story.append(Spacer(1, 2))
         w_data = [[p_cell("Site Name", True, color_hex='#ffffff'), p_cell("Cell Name", True, color_hex='#ffffff'), p_cell("Giá trị KPI", True, color_hex='#ffffff'), p_cell("Total Traffic (GB)", True, color_hex='#ffffff')]]
@@ -342,6 +342,9 @@ def generate_pdf_report(summary, hourly_trend_df, top10_sites, top10_cells, wors
     render_worst_pdf_table("2. Worst 10 Cells theo Tỷ lệ Rớt Dịch vụ (DCR / Drop Rate):", worst10_dcr, "Service Drop (all service)", "{:.3f}%", "#b91c1c")
     render_worst_pdf_table("3. Worst 10 Cells theo Tỷ lệ Chuyển giao Nội băng (Intra-freq HO):", worst10_intra_ho, "Intra-frequency HO (%)", "{:.2f}%", "#c2410c")
     render_worst_pdf_table("4. Worst 10 Cells theo Tỷ lệ Chuyển giao Liên tần (Inter-freq HO):", worst10_inter_ho, "Inter-frequency HO (%)", "{:.2f}%", "#ea580c")
+    render_worst_pdf_table("5. Worst 10 Cells theo Chỉ số Chất lượng Vùng phủ (CQI Index):", worst10_cqi, "CQI_4G", "{:.2f}%", "#d97706")
+    render_worst_pdf_table("6. Worst 10 Cells theo Tốc độ Tải xuống (DL Throughput):", worst10_dl_thrp, "DL_Throughput_Mbps", "{:.2f} Mbps", "#7c3aed")
+    render_worst_pdf_table("7. Worst 10 Cells theo Tỷ lệ Sử dụng PRB DL (PRB DL Utilization):", worst10_prb, "Resource Block Untilizing Rate Downlink (%)", "{:.2f}%", "#4c1d95")
 
     doc.build(story)
     buf.seek(0)
