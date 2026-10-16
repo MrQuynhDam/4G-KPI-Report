@@ -265,8 +265,23 @@ def render_top_traffic_section(filtered_df, site_col, cell_col):
     return top_cell_df, top_site_df, cell_agg_all
 
 
-def render_worst_cells_and_pdf(filtered_df, site_col, cell_col, cell_agg_all, top_site_df, top_cell_df, fb_cell_counts, fb_tf_df, cell_type_counts, fb_type_xtab, fb_dl_df, sel_dates, sel_sites, has_hour):
-    """Bảng Worst Cells Matrix & Xuất Báo Cáo PDF."""
+def render_worst_cells_and_pdf(
+    filtered_df,
+    site_col,
+    cell_col,
+    cell_agg_all,
+    top_site_df,
+    top_cell_df,
+    fb_cell_counts,
+    fb_tf_df,
+    cell_type_counts,
+    fb_type_xtab,
+    fb_dl_df,
+    sel_dates,
+    sel_sites,
+    has_hour
+):
+    """Bảng Worst Cells Matrix & Xuất Báo Cáo PDF với Checkbox riêng từng mục."""
     st.subheader("⚠️ Danh Sách Worst N Cells Theo Chỉ Số KPI")
 
     if cell_col and cell_col in filtered_df.columns:
@@ -286,8 +301,10 @@ def render_worst_cells_and_pdf(filtered_df, site_col, cell_col, cell_agg_all, to
 
         if available_kpi_options:
             kpi_col1, kpi_col2 = st.columns([2, 1])
-            with kpi_col1: sel_worst_kpi_lbl = st.selectbox("🎯 Chọn KPI cần xem trên giao diện:", options=list(available_kpi_options.keys()))
-            with kpi_col2: top_n_worst = st.number_input("🔢 Nhập số lượng Worst Cells (N):", min_value=1, max_value=200, value=10, step=1)
+            with kpi_col1:
+                sel_worst_kpi_lbl = st.selectbox("🎯 Chọn KPI cần xem trên giao diện:", options=list(available_kpi_options.keys()))
+            with kpi_col2:
+                top_n_worst = st.number_input("🔢 Nhập số lượng Worst Cells (N):", min_value=1, max_value=200, value=10, step=1)
 
             target_col, sort_ascending = available_kpi_options[sel_worst_kpi_lbl]
             grp_worst_cols = [c for c in [site_col, cell_col] if c is not None and c in filtered_df.columns]
@@ -302,32 +319,43 @@ def render_worst_cells_and_pdf(filtered_df, site_col, cell_col, cell_agg_all, to
                 st.markdown("---")
                 st.markdown("### 📄 PDF Report Export")
 
-                # Ánh xạ danh sách các danh mục Worst N cần xuất ra PDF
-                pdf_worst_kpis_map = {
-                    "Worst 10 CSSR (Tỷ lệ thiết lập cuộc gọi)": "cssr",
-                    "Worst 10 DCR / Drop Rate (Tỷ lệ rớt dịch vụ)": "dcr",
-                    "Worst 10 Intra-freq HO SR (Chuyển giao nội băng)": "intra_ho",
-                    "Worst 10 Inter-freq HO SR (Chuyển giao liên tần)": "inter_ho",
-                    "Worst 10 CQI Index (Chất lượng vùng phủ RF)": "cqi",
-                    "Worst 10 DL Throughput (Tốc độ tải xuống)": "dl_thrp",
-                    "Worst 10 PRB DL Utilization (Tải PRB Downlink)": "prb",
-                }
+                st.markdown("##### ⚙️ Lựa chọn danh sách Worst N Cells cần đưa vào PDF:")
 
-                st.markdown("##### ⚙️ Lựa chọn danh sách Worst N Cells cần xuất ra PDF:")
-                selected_worst_pdf_labels = st.multiselect(
-                    "Chọn các bảng Worst Cells đưa vào PDF:",
-                    options=list(pdf_worst_kpis_map.keys()),
-                    default=list(pdf_worst_kpis_map.keys()),  # Default ALL
-                    key="ms_worst_pdf_selection"
-                )
-                
+                # Dàn checkbox thành 2 cột cho thoáng và dễ nhìn
+                cb_col1, cb_col2 = st.columns(2)
+                selected_codes = []
+
+                with cb_col1:
+                    if st.checkbox("Worst 10 CSSR (Tỷ lệ thiết lập cuộc gọi)", value=True, key="chk_pdf_cssr"):
+                        selected_codes.append("cssr")
+                    if st.checkbox("Worst 10 Intra-freq HO SR (Chuyển giao nội băng)", value=True, key="chk_pdf_intra"):
+                        selected_codes.append("intra_ho")
+                    if st.checkbox("Worst 10 CQI Index (Chất lượng vùng phủ RF)", value=True, key="chk_pdf_cqi"):
+                        selected_codes.append("cqi")
+                    if st.checkbox("Worst 10 PRB DL Utilization (Tải PRB Downlink)", value=True, key="chk_pdf_prb"):
+                        selected_codes.append("prb")
+
+                with cb_col2:
+                    if st.checkbox("Worst 10 DCR / Drop Rate (Tỷ lệ rớt dịch vụ)", value=True, key="chk_pdf_dcr"):
+                        selected_codes.append("dcr")
+                    if st.checkbox("Worst 10 Inter-freq HO SR (Chuyển giao liên tần)", value=True, key="chk_pdf_inter"):
+                        selected_codes.append("inter_ho")
+                    if st.checkbox("Worst 10 DL Throughput (Tốc độ tải xuống)", value=True, key="chk_pdf_dl"):
+                        selected_codes.append("dl_thrp")
+
+                st.markdown("") # Khoảng nghỉ
+
                 s_tf = filtered_df.get("Total Data Traffic Volume (GB)", pd.Series([0]))
-                _pdf_sig = (len(filtered_df), round(float(s_tf.sum()), 3), tuple(map(str, sel_dates)), len(sel_sites), tuple(selected_worst_pdf_labels))
+                _pdf_sig = (
+                    len(filtered_df),
+                    round(float(s_tf.sum()), 3),
+                    tuple(map(str, sel_dates)),
+                    len(sel_sites),
+                    tuple(sorted(selected_codes))
+                )
 
                 if st.button("📑 Tạo Báo Cáo PDF", key="btn_gen_pdf_4g"):
                     with st.spinner("⏳ Đang khởi tạo báo cáo PDF 4G..."):
-                        selected_codes = [pdf_worst_kpis_map[lbl] for lbl in selected_worst_pdf_labels]
-
                         _top = lambda col, asc: (cell_agg.nsmallest(10, col) if asc else cell_agg.nlargest(10, col)) if col in cell_agg.columns else pd.DataFrame()
 
                         worst10_cssr = _top("Call Setup Success Rate", True) if "cssr" in selected_codes else None
@@ -355,8 +383,9 @@ def render_worst_cells_and_pdf(filtered_df, site_col, cell_col, cell_agg_all, to
                         }
 
                         timeline_grp = [c for c in ["Date", "Hour", "DateTime"] if c in filtered_df.columns]
-                        if not has_hour and "Hour" in timeline_grp: timeline_grp.remove("Hour")
-                        
+                        if not has_hour and "Hour" in timeline_grp:
+                            timeline_grp.remove("Hour")
+
                         if timeline_grp:
                             c_data_timeline = aggregate_kpis(filtered_df, timeline_grp)
                             if "DateTime" in c_data_timeline.columns:
@@ -366,21 +395,40 @@ def render_worst_cells_and_pdf(filtered_df, site_col, cell_col, cell_agg_all, to
                                 c_data_timeline["TimeLabel"] = pd.to_datetime(c_data_timeline["Date"]).dt.strftime("%d/%m")
                             elif "Hour" in c_data_timeline.columns:
                                 c_data_timeline["TimeLabel"] = c_data_timeline["Hour"].astype(str) + ":00"
-                            else: c_data_timeline["TimeLabel"] = "Timeline"
+                            else:
+                                c_data_timeline["TimeLabel"] = "Timeline"
                         else:
                             c_data_timeline = pd.DataFrame()
 
                         pdf_buf = generate_pdf_report(
-                            summary_data, c_data_timeline, top10_sites_pdf, top10_cells_pdf,
-                            worst10_cssr, worst10_dcr, worst10_intra_ho, worst10_inter_ho,
-                            fb_cell_counts, fb_tf_df, cell_type_counts, fb_type_xtab, fb_dl_df,
-                            worst10_cqi=worst10_cqi, worst10_dl_thrp=worst10_dl_thrp, worst10_prb=worst10_prb
+                            summary_data,
+                            c_data_timeline,
+                            top10_sites_pdf,
+                            top10_cells_pdf,
+                            worst10_cssr=worst10_cssr,
+                            worst10_dcr=worst10_dcr,
+                            worst10_intra_ho=worst10_intra_ho,
+                            worst10_inter_ho=worst10_inter_ho,
+                            fb_cell_counts=fb_cell_counts,
+                            fb_tf_df=fb_tf_df,
+                            cell_type_counts=cell_type_counts,
+                            fb_type_xtab=fb_type_xtab,
+                            fb_dl_df=fb_dl_df,
+                            worst10_cqi=worst10_cqi,
+                            worst10_dl_thrp=worst10_dl_thrp,
+                            worst10_prb=worst10_prb,
                         )
                         st.session_state["pdf_bytes"] = pdf_buf.getvalue()
                         st.session_state["pdf_sig"] = _pdf_sig
 
                 if st.session_state.get("pdf_bytes") is not None:
                     if st.session_state.get("pdf_sig") == _pdf_sig:
-                        st.download_button(label="⬇️ Tải Báo Cáo PDF", data=st.session_state["pdf_bytes"], file_name="4G_Network_Health.pdf", mime="application/pdf", key="btn_dl_pdf_4g")
+                        st.download_button(
+                            label="⬇️ Tải Báo Cáo PDF",
+                            data=st.session_state["pdf_bytes"],
+                            file_name="4G_Network_Health.pdf",
+                            mime="application/pdf",
+                            key="btn_dl_pdf_4g"
+                        )
                     else:
-                        st.info("💡 Bộ lọc hoặc lựa chọn Worst Cell xuất PDF đã thay đổi — bấm 'Tạo Báo Cáo PDF' để cập nhật lại.")
+                        st.info("💡 Lựa chọn danh mục xuất PDF đã thay đổi — bấm 'Tạo Báo Cáo PDF' để cập nhật lại.")
