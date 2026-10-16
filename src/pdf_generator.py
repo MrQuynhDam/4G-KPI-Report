@@ -26,7 +26,8 @@ def generate_pdf_report(
     fb_dl_df=None,
     worst10_cqi=None,
     worst10_dl_thrp=None,
-    worst10_prb=None
+    worst10_prb=None,
+    worst10_inter_rat_ho=None
 ):
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
@@ -340,9 +341,10 @@ def generate_pdf_report(
         ("2. Worst 10 Cells theo Tỷ lệ Rớt Dịch vụ (DCR / Drop Rate):", worst10_dcr, "Service Drop (all service)", "{:.3f}%", "#b91c1c"),
         ("3. Worst 10 Cells theo Tỷ lệ Chuyển giao Nội băng (Intra-freq HO):", worst10_intra_ho, "Intra-frequency HO (%)", "{:.2f}%", "#c2410c"),
         ("4. Worst 10 Cells theo Tỷ lệ Chuyển giao Liên tần (Inter-freq HO):", worst10_inter_ho, "Inter-frequency HO (%)", "{:.2f}%", "#ea580c"),
-        ("5. Worst 10 Cells theo Chỉ số Chất lượng Vùng phủ (CQI Index):", worst10_cqi, "CQI_4G", "{:.2f}%", "#d97706"),
-        ("6. Worst 10 Cells theo Tốc độ Tải xuống (DL Throughput):", worst10_dl_thrp, "DL_Throughput_Mbps", "{:.2f} Mbps", "#7c3aed"),
-        ("7. Worst 10 Cells theo Tỷ lệ Sử dụng PRB DL (PRB DL Utilization):", worst10_prb, "Resource Block Untilizing Rate Downlink (%)", "{:.2f}%", "#4c1d95"),
+        ("5. Worst 10 Cells theo Tỷ lệ Chuyển giao 4G-3G (Inter-RAT HOSR):", worst10_inter_rat_ho, "Inter-RAT HOSR (LTE to WCDMA) (%)", "{:.2f}%", "#b45309"),
+        ("6. Worst 10 Cells theo Chỉ số Chất lượng Vùng phủ (CQI Index):", worst10_cqi, "CQI_4G", "{:.2f}%", "#d97706"),
+        ("7. Worst 10 Cells theo Tốc độ Tải xuống (DL Throughput):", worst10_dl_thrp, "DL_Throughput_Mbps", "{:.2f} Mbps", "#7c3aed"),
+        ("8. Worst 10 Cells theo Tỷ lệ Sử dụng PRB DL (PRB DL Utilization):", worst10_prb, "Resource Block Untilizing Rate Downlink (%)", "{:.2f}%", "#4c1d95"),
     ]
 
     has_any_worst = any(df is not None and not df.empty for _, df, _, _, _ in worst_dfs)
