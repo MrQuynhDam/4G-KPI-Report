@@ -289,8 +289,8 @@ def render_worst_cells_and_pdf(
             "CSSR Thấp (Call Setup Success Rate)": ("Call Setup Success Rate", True),
             "DCR / Drop Rate Cao (Service Drop)": ("Service Drop (all service)", False),
             "Intra-Freq HO SR Thấp (Chuyển giao nội băng)": ("Intra-frequency HO (%)", True),
-            "Inter-RAT HOSR Thấp (Chuyển giao 4G-3G)": ("Inter-RAT HOSR (LTE to WCDMA) (%)", True),
             "Inter-Freq HO SR Thấp (Chuyển giao liên tần)": ("Inter-frequency HO (%)", True),
+            "Inter-RAT HOSR Thấp (Chuyển giao 4G-3G)": ("Inter-RAT HOSR (LTE to WCDMA) (%)", True),
             "DL Throughput Thấp (Tốc độ Tải xuống)": ("DL_Throughput_Mbps", True),
             "UL Throughput Thấp (Tốc độ Tải lên)": ("UL_Throughput_Mbps", True),
             "CQI Index Thấp (Chất lượng Vùng phủ RF)": ("CQI_4G", True),
@@ -325,11 +325,12 @@ def render_worst_cells_and_pdf(
                 child_checkbox_keys = [
                     "chk_pdf_cssr",
                     "chk_pdf_intra",
+                    "chk_pdf_inter",
+                    "chk_pdf_inter_rat",
                     "chk_pdf_cqi",
+                    "chk_pdf_dl",
                     "chk_pdf_prb",
                     "chk_pdf_dcr",
-                    "chk_pdf_inter",
-                    "chk_pdf_dl",
                 ]
 
                 # Hàm callback toggle chọn/bỏ chọn tất cả
@@ -362,18 +363,20 @@ def render_worst_cells_and_pdf(
                         selected_codes.append("cssr")
                     if st.checkbox("Worst 10 Intra-freq HO SR (Chuyển giao nội băng)", key="chk_pdf_intra"):
                         selected_codes.append("intra_ho")
-                    if st.checkbox("Worst 10 CQI Index (Chất lượng vùng phủ RF)", key="chk_pdf_cqi"):
-                        selected_codes.append("cqi")
-                    if st.checkbox("Worst 10 PRB DL Utilization (Tải PRB Downlink)", key="chk_pdf_prb"):
-                        selected_codes.append("prb")
+                    if st.checkbox("Worst 10 Inter-freq HO SR (Chuyển giao liên tần)", key="chk_pdf_inter"):
+                        selected_codes.append("inter_ho")
+                    if st.checkbox("Worst 10 Inter-RAT HOSR (Chuyển giao 4G-3G)", key="chk_pdf_inter_rat"):
+                        selected_codes.append("inter_rat")
 
                 with cb_col2:
                     if st.checkbox("Worst 10 DCR / Drop Rate (Tỷ lệ rớt dịch vụ)", key="chk_pdf_dcr"):
                         selected_codes.append("dcr")
-                    if st.checkbox("Worst 10 Inter-freq HO SR (Chuyển giao liên tần)", key="chk_pdf_inter"):
-                        selected_codes.append("inter_ho")
+                    if st.checkbox("Worst 10 CQI Index (Chất lượng vùng phủ RF)", key="chk_pdf_cqi"):
+                        selected_codes.append("cqi")
                     if st.checkbox("Worst 10 DL Throughput (Tốc độ tải xuống)", key="chk_pdf_dl"):
                         selected_codes.append("dl_thrp")
+                    if st.checkbox("Worst 10 PRB DL Utilization (Tải PRB Downlink)", key="chk_pdf_prb"):
+                        selected_codes.append("prb")
 
                 st.markdown("") # Khoảng nghỉ
 
@@ -394,6 +397,7 @@ def render_worst_cells_and_pdf(
                         worst10_dcr = _top("Service Drop (all service)", False) if "dcr" in selected_codes else None
                         worst10_intra_ho = _top("Intra-frequency HO (%)", True) if "intra_ho" in selected_codes else None
                         worst10_inter_ho = _top("Inter-frequency HO (%)", True) if "inter_ho" in selected_codes else None
+                        worst10_inter_rat_ho = _top("Inter-RAT HOSR (LTE to WCDMA) (%)", True) if "inter_rat" in selected_codes else None
                         worst10_cqi = _top("CQI_4G", True) if "cqi" in selected_codes else None
                         worst10_dl_thrp = _top("DL_Throughput_Mbps", True) if "dl_thrp" in selected_codes else None
                         worst10_prb = _top("Resource Block Untilizing Rate Downlink (%)", False) if "prb" in selected_codes else None
@@ -449,6 +453,7 @@ def render_worst_cells_and_pdf(
                             worst10_cqi=worst10_cqi,
                             worst10_dl_thrp=worst10_dl_thrp,
                             worst10_prb=worst10_prb,
+                            worst10_inter_rat_ho=worst10_inter_rat_ho,
                         )
                         st.session_state["pdf_bytes"] = pdf_buf.getvalue()
                         st.session_state["pdf_sig"] = _pdf_sig
