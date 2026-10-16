@@ -301,20 +301,42 @@ def render_worst_cells_and_pdf(filtered_df, site_col, cell_col, cell_agg_all, to
 
                 st.markdown("---")
                 st.markdown("### 📄 PDF Report Export")
+
+                # Ánh xạ danh sách các danh mục Worst N cần xuất ra PDF
+                pdf_worst_kpis_map = {
+                    "Worst 10 CSSR (Tỷ lệ thiết lập cuộc gọi)": "cssr",
+                    "Worst 10 DCR / Drop Rate (Tỷ lệ rớt dịch vụ)": "dcr",
+                    "Worst 10 Intra-freq HO SR (Chuyển giao nội băng)": "intra_ho",
+                    "Worst 10 Inter-freq HO SR (Chuyển giao liên tần)": "inter_ho",
+                    "Worst 10 CQI Index (Chất lượng vùng phủ RF)": "cqi",
+                    "Worst 10 DL Throughput (Tốc độ tải xuống)": "dl_thrp",
+                    "Worst 10 PRB DL Utilization (Tải PRB Downlink)": "prb",
+                }
+
+                st.markdown("##### ⚙️ Lựa chọn danh sách Worst N Cells cần xuất ra PDF:")
+                selected_worst_pdf_labels = st.multiselect(
+                    "Chọn các bảng Worst Cells đưa vào PDF:",
+                    options=list(pdf_worst_kpis_map.keys()),
+                    default=list(pdf_worst_kpis_map.keys()),  # Default ALL
+                    key="ms_worst_pdf_selection"
+                )
                 
                 s_tf = filtered_df.get("Total Data Traffic Volume (GB)", pd.Series([0]))
-                _pdf_sig = (len(filtered_df), round(float(s_tf.sum()), 3), tuple(map(str, sel_dates)), len(sel_sites))
+                _pdf_sig = (len(filtered_df), round(float(s_tf.sum()), 3), tuple(map(str, sel_dates)), len(sel_sites), tuple(selected_worst_pdf_labels))
 
-                if st.button("📑 Tạo Báo Cáo PDF"):
-                    with st.spinner("Đang tạo PDF..."):
+                if st.button("📑 Tạo Báo Cáo PDF", key="btn_gen_pdf_4g"):
+                    with st.spinner("⏳ Đang khởi tạo báo cáo PDF 4G..."):
+                        selected_codes = [pdf_worst_kpis_map[lbl] for lbl in selected_worst_pdf_labels]
+
                         _top = lambda col, asc: (cell_agg.nsmallest(10, col) if asc else cell_agg.nlargest(10, col)) if col in cell_agg.columns else pd.DataFrame()
-                        worst10_cssr = _top("Call Setup Success Rate", True)
-                        worst10_dcr = _top("Service Drop (all service)", False)
-                        worst10_intra_ho = _top("Intra-frequency HO (%)", True)
-                        worst10_inter_ho = _top("Inter-frequency HO (%)", True)
-                        worst10_cqi = _top("CQI_4G", True)
-                        worst10_dl_thrp = _top("DL_Throughput_Mbps", True)
-                        worst10_prb = _top("Resource Block Untilizing Rate Downlink (%)", False)
+
+                        worst10_cssr = _top("Call Setup Success Rate", True) if "cssr" in selected_codes else None
+                        worst10_dcr = _top("Service Drop (all service)", False) if "dcr" in selected_codes else None
+                        worst10_intra_ho = _top("Intra-frequency HO (%)", True) if "intra_ho" in selected_codes else None
+                        worst10_inter_ho = _top("Inter-frequency HO (%)", True) if "inter_ho" in selected_codes else None
+                        worst10_cqi = _top("CQI_4G", True) if "cqi" in selected_codes else None
+                        worst10_dl_thrp = _top("DL_Throughput_Mbps", True) if "dl_thrp" in selected_codes else None
+                        worst10_prb = _top("Resource Block Untilizing Rate Downlink (%)", False) if "prb" in selected_codes else None
 
                         top10_sites_pdf = top_site_df.head(10) if not top_site_df.empty else pd.DataFrame()
                         top10_cells_pdf = top_cell_df.head(10) if not top_cell_df.empty else pd.DataFrame()
@@ -359,6 +381,6 @@ def render_worst_cells_and_pdf(filtered_df, site_col, cell_col, cell_agg_all, to
 
                 if st.session_state.get("pdf_bytes") is not None:
                     if st.session_state.get("pdf_sig") == _pdf_sig:
-                        st.download_button(label="⬇️ Tải Báo Cáo PDF", data=st.session_state["pdf_bytes"], file_name="4G_Network_Health.pdf", mime="application/pdf")
+                        st.download_button(label="⬇️ Tải Báo Cáo PDF", data=st.session_state["pdf_bytes"], file_name="4G_Network_Health.pdf", mime="application/pdf", key="btn_dl_pdf_4g")
                     else:
-                        st.info("Bộ lọc đã thay đổi — bấm 'Tạo Báo Cáo PDF' để tạo lại.")
+                        st.info("💡 Bộ lọc hoặc lựa chọn Worst Cell xuất PDF đã thay đổi — bấm 'Tạo Báo Cáo PDF' để cập nhật lại.")
