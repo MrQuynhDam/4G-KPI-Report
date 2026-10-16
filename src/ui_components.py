@@ -281,7 +281,7 @@ def render_worst_cells_and_pdf(
     sel_sites,
     has_hour
 ):
-    """Bảng Worst Cells Matrix & Xuất Báo Cáo PDF với Checkbox riêng từng mục."""
+    """Bảng Worst Cells Matrix & Xuất Báo Cáo PDF với Checkbox riêng từng mục và nút Select All."""
     st.subheader("⚠️ Danh Sách Worst N Cells Theo Chỉ Số KPI")
 
     if cell_col and cell_col in filtered_df.columns:
@@ -321,26 +321,58 @@ def render_worst_cells_and_pdf(
 
                 st.markdown("##### ⚙️ Lựa chọn danh sách Worst N Cells cần đưa vào PDF:")
 
-                # Dàn checkbox thành 2 cột cho thoáng và dễ nhìn
+                # Khai báo các key checkbox con
+                child_checkbox_keys = [
+                    "chk_pdf_cssr",
+                    "chk_pdf_intra",
+                    "chk_pdf_cqi",
+                    "chk_pdf_prb",
+                    "chk_pdf_dcr",
+                    "chk_pdf_inter",
+                    "chk_pdf_dl",
+                ]
+
+                # Hàm callback toggle chọn/bỏ chọn tất cả
+                def toggle_select_all():
+                    new_state = st.session_state.get("chk_pdf_select_all", True)
+                    for key in child_checkbox_keys:
+                        st.session_state[key] = new_state
+
+                # Checkbox Select All ở vị trí đầu tiên
+                st.checkbox(
+                    "☑️ **Select All** (Chọn / Bỏ chọn tất cả danh mục)",
+                    value=True,
+                    key="chk_pdf_select_all",
+                    on_change=toggle_select_all
+                )
+
+                st.markdown("")  # Khoảng cách nhỏ
+
+                # Dàn các checkbox con thành 2 cột
                 cb_col1, cb_col2 = st.columns(2)
                 selected_codes = []
 
+                # Khởi tạo giá trị ban đầu trong session_state nếu chưa có
+                for k in child_checkbox_keys:
+                    if k not in st.session_state:
+                        st.session_state[k] = True
+
                 with cb_col1:
-                    if st.checkbox("Worst 10 CSSR (Tỷ lệ thiết lập cuộc gọi)", value=True, key="chk_pdf_cssr"):
+                    if st.checkbox("Worst 10 CSSR (Tỷ lệ thiết lập cuộc gọi)", key="chk_pdf_cssr"):
                         selected_codes.append("cssr")
-                    if st.checkbox("Worst 10 Intra-freq HO SR (Chuyển giao nội băng)", value=True, key="chk_pdf_intra"):
+                    if st.checkbox("Worst 10 Intra-freq HO SR (Chuyển giao nội băng)", key="chk_pdf_intra"):
                         selected_codes.append("intra_ho")
-                    if st.checkbox("Worst 10 CQI Index (Chất lượng vùng phủ RF)", value=True, key="chk_pdf_cqi"):
+                    if st.checkbox("Worst 10 CQI Index (Chất lượng vùng phủ RF)", key="chk_pdf_cqi"):
                         selected_codes.append("cqi")
-                    if st.checkbox("Worst 10 PRB DL Utilization (Tải PRB Downlink)", value=True, key="chk_pdf_prb"):
+                    if st.checkbox("Worst 10 PRB DL Utilization (Tải PRB Downlink)", key="chk_pdf_prb"):
                         selected_codes.append("prb")
 
                 with cb_col2:
-                    if st.checkbox("Worst 10 DCR / Drop Rate (Tỷ lệ rớt dịch vụ)", value=True, key="chk_pdf_dcr"):
+                    if st.checkbox("Worst 10 DCR / Drop Rate (Tỷ lệ rớt dịch vụ)", key="chk_pdf_dcr"):
                         selected_codes.append("dcr")
-                    if st.checkbox("Worst 10 Inter-freq HO SR (Chuyển giao liên tần)", value=True, key="chk_pdf_inter"):
+                    if st.checkbox("Worst 10 Inter-freq HO SR (Chuyển giao liên tần)", key="chk_pdf_inter"):
                         selected_codes.append("inter_ho")
-                    if st.checkbox("Worst 10 DL Throughput (Tốc độ tải xuống)", value=True, key="chk_pdf_dl"):
+                    if st.checkbox("Worst 10 DL Throughput (Tốc độ tải xuống)", key="chk_pdf_dl"):
                         selected_codes.append("dl_thrp")
 
                 st.markdown("") # Khoảng nghỉ
