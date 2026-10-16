@@ -337,14 +337,14 @@ def generate_pdf_report(
 
     # MỤC V. DANH SÁCH WORST 10 CELLS
     worst_dfs = [
-        ("1. Worst 10 Cells theo Tỷ lệ Thiết lập Cuộc gọi (CSSR):", worst10_cssr, "Call Setup Success Rate", "{:.2f}%", "#991b1b"),
-        ("2. Worst 10 Cells theo Tỷ lệ Rớt Dịch vụ (DCR / Drop Rate):", worst10_dcr, "Service Drop (all service)", "{:.3f}%", "#b91c1c"),
-        ("3. Worst 10 Cells theo Tỷ lệ Chuyển giao Nội băng (Intra-freq HO):", worst10_intra_ho, "Intra-frequency HO (%)", "{:.2f}%", "#c2410c"),
-        ("4. Worst 10 Cells theo Tỷ lệ Chuyển giao Liên tần (Inter-freq HO):", worst10_inter_ho, "Inter-frequency HO (%)", "{:.2f}%", "#ea580c"),
-        ("5. Worst 10 Cells theo Tỷ lệ Chuyển giao 4G-3G (Inter-RAT HOSR):", worst10_inter_rat_ho, "Inter-RAT HOSR (LTE to WCDMA) (%)", "{:.2f}%", "#b45309"),
-        ("6. Worst 10 Cells theo Chỉ số Chất lượng Vùng phủ (CQI Index):", worst10_cqi, "CQI_4G", "{:.2f}%", "#d97706"),
-        ("7. Worst 10 Cells theo Tốc độ Tải xuống (DL Throughput):", worst10_dl_thrp, "DL_Throughput_Mbps", "{:.2f} Mbps", "#7c3aed"),
-        ("8. Worst 10 Cells theo Tỷ lệ Sử dụng PRB DL (PRB DL Utilization):", worst10_prb, "Resource Block Untilizing Rate Downlink (%)", "{:.2f}%", "#4c1d95"),
+        ("Worst 10 Cells theo Tỷ lệ Thiết lập Cuộc gọi (CSSR):", worst10_cssr, "Call Setup Success Rate", "{:.2f}%", "#991b1b"),
+        ("Worst 10 Cells theo Tỷ lệ Rớt Dịch vụ (DCR / Drop Rate):", worst10_dcr, "Service Drop (all service)", "{:.3f}%", "#b91c1c"),
+        ("Worst 10 Cells theo Tỷ lệ Chuyển giao Nội băng (Intra-freq HO):", worst10_intra_ho, "Intra-frequency HO (%)", "{:.2f}%", "#c2410c"),
+        ("Worst 10 Cells theo Tỷ lệ Chuyển giao Liên tần (Inter-freq HO):", worst10_inter_ho, "Inter-frequency HO (%)", "{:.2f}%", "#ea580c"),
+        ("Worst 10 Cells theo Tỷ lệ Chuyển giao 4G-3G (Inter-RAT HOSR):", worst10_inter_rat_ho, "Inter-RAT HOSR (LTE to WCDMA) (%)", "{:.2f}%", "#b45309"),
+        ("Worst 10 Cells theo Chỉ số Chất lượng Vùng phủ (CQI Index):", worst10_cqi, "CQI_4G", "{:.2f}%", "#d97706"),
+        ("Worst 10 Cells theo Tốc độ Tải xuống (DL Throughput):", worst10_dl_thrp, "DL_Throughput_Mbps", "{:.2f} Mbps", "#7c3aed"),
+        ("Worst 10 Cells theo Tỷ lệ Sử dụng PRB DL (PRB DL Utilization):", worst10_prb, "Resource Block Untilizing Rate Downlink (%)", "{:.2f}%", "#4c1d95"),
     ]
 
     has_any_worst = any(df is not None and not df.empty for _, df, _, _, _ in worst_dfs)
