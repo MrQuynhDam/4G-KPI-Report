@@ -1,6 +1,7 @@
 import os
 import matplotlib
 import matplotlib.pyplot as plt
+import streamlit as st
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.fonts import addMapping
@@ -109,3 +110,8 @@ CUSTOM_CSS = """
     }
 </style>
 """
+
+
+def inject_custom_css():
+    """Inject CSS tùy chỉnh giao diện Streamlit."""
+    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
